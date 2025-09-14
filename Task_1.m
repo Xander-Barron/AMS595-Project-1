@@ -6,7 +6,6 @@ timeElapsed = []; %initialize empty vector to measure the time elapsed per itera
 estimatedPiVec = []; %initialize empty vector to keep the estimated pi per iteration
 
 for i = linspace(100, 100000, 999)
-
     tic; %start timer
     %repeat the Monte Carlo simulation for each value of N
     insideCircle = 0; %reset count for each iteration
@@ -24,17 +23,19 @@ for i = linspace(100, 100000, 999)
     N(end+1) = i; %store the current number of points used
     errorVec(end+1) = piError; %store the current error
     timeElapsed(end+1) = toc; %store the elapsed time for the current iteration
-    estimatedPiVec(end+1) = estimatedPi;
+    estimatedPiVec(end+1) = estimatedPi; %store estimated pi calculations
 end
 
+%plot of estimated pi and its absolute error from true pi
 scatter(N, errorVec, "b.");
 hold on;
-xlabel("Number of points thrown (N)");
-ylabel("Error from pi");
+xlabel("Number of points thrown (N)"); 
+%no need for y label as we're overlaying two plots
 title("Monte Carlo pi Error");
-scatter(N, estimatedPiVec, "r.");
+scatter(N, estimatedPiVec, "r."); %estimated pi scatter overlayed
 grid on;
 
+%new figure to plot execution time against error
 figure;
 scatter(timeElapsed, errorVec, "b.");
 %add labels and title to the second scatter plot
