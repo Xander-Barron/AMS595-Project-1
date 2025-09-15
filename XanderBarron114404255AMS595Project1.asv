@@ -1,0 +1,108 @@
+%% TASK 1: Error & Runtime vs N (SCRIPT SECTION)
+% ... (your documented header)
+N = []; errorVec = []; timeElapsed = []; estimatedPiVec = [];
+for i = round(linspace(100,100000,999))
+    tic;
+    inside = 0;
+    for j = 1:i
+        x = rand; y = rand;
+        if (x-0.5)^2 + (y-0.5)^2 <= 0.25
+            inside = inside + 1;
+        end
+    end
+    est = 4*(inside/i);
+    N(end+1) = i;
+    estimatedPiVec(end+1) = est;
+    errorVec(end+1) = abs(est - pi);
+    timeElapsed(end+1) = toc;
+end
+figure; hold on; grid on;
+h1 = scatter(N, errorVec, 'b.');
+h2 = scatter(N, estimatedPiVec, 'r.');
+xlabel('Number of points (N)');
+title('Monte Carlo \pi: Error and Estimate vs N');
+legend([h1 h2], {'| \pî - \pi |','Estimated '}, 'Location','best');
+
+figure; grid on;
+scatter(timeElapsed, errorVec, 'b.');
+xlabel('Time Elapsed (s)'); ylabel('Error from \pi');
+title('Error vs Time');
+
+%% TASK 2: Stop at precision (SCRIPT SECTION)
+% ... (your documented header)
+N_iters = []; estimatedPiVec2 = []; sigFigVec = [];
+for s = 1:10
+    targetRounded = estimatePi(s);
+    tot = 0; inside = 0; 
+    while true
+        tot = tot + 1; x = rand; y = rand;
+        if (x-0.5)^2 + (y-0.5)^2 <= 0.25, inside = inside + 1; end
+        est = 4*(inside/tot);
+        if roundSig(est, s) == targetRounded
+            N_iters(end+1) = tot;
+            estimatedPiVec2(end+1) = est;
+            sigFigVec(end+1) = s;
+            break;
+        end
+    end
+end
+figure; semilogy(sigFigVec, N_iters, 'o-', 'LineWidth',2, 'MarkerSize',8);
+grid on; xlabel('Significant Figures'); ylabel('Iterations Needed (log)');
+title('Iterations vs Significant Figures');
+
+%% TASK 3: User-specified precision with plot (CALL THE LOCAL FUNCTION)
+% Option A: Demo run so the single file "executes" everything:
+piVal_demo = Task_3(3);  %#ok<NASGU>
+% Option B: If you want to keep the separate Task_3.m for standalone use,
+% comment the call above and leave the local function below for this single-file deliverable.
+
+%% ----- LOCAL FUNCTIONS (ONE COPY ONLY; at the very end) -----
+function piEstimate = Task_3(sigFigs)
+    validateattributes(sigFigs, {'numeric'}, {'scalar','integer','>=',1});
+    targetRounded = estimatePi(sigFigs);
+    N = 0; in = 0; xIn = []; yIn = []; xOut = []; yOut = [];
+    while true
+        N = N + 1; x = rand; y = rand;
+        if (x-0.5)^2 + (y-0.5)^2 <= 0.25
+            in = in + 1; xIn(end+1)=x; yIn(end+1)=y;
+        else
+            xOut(end+1)=x; yOut(end+1)=y;
+        end
+        piEstimate = 4*(in/N);
+        if roundSig(piEstimate, sigFigs) == targetRounded, break; end
+    end
+    roundedPi = roundSig(piEstimate, sigFigs);
+    figure; hold on; axis equal; box on; grid on;
+    xlim([0 1]); ylim([0 1]); xlabel('x'); ylabel('y');
+    title(sprintf('Monte Carlo \\pi Estimation with %d sig figs', sigFigs));
+    th = linspace(0,2*pi,600);
+    plot(0.5+0.5*cos(th), 0.5+0.5*sin(th), 'k-', 'LineWidth',2);
+    scatter(xIn, yIn, 4, 'filled', 'MarkerFaceColor','r');
+    scatter(xOut,yOut,4, 'filled', 'MarkerFaceColor','b');
+    legend({'Circle boundary','Inside (red)','Outside (blue)'}, 'Location','southoutside');
+    anno = sprintf('pi = %.*g (to %d sig figs)\nUnrounded: %.10f\nN = %d', ...
+                    sigFigs, roundedPi, sigFigs, piEstimate, N);
+    annotation('textbox', [0.75,0.25,0.2,0.2], 'String', anno, ...
+               'FitBoxToText','on','Interpreter','none','FontWeight','bold','Margin',6);
+    fprintf('Final pi (rounded to %d sig figs): %.*g\n', sigFigs, sigFigs, roundedPi);
+    fprintf('Unrounded estimate: %.10f with N = %d\n', piEstimate, N);
+end
+
+function y = roundSig(x, s)
+    if x == 0, y = 0; return; end
+    k = floor(log10(abs(x)));
+    y = round(x / 10^k, s-1) * 10^k;
+end
+
+function piEstimate = estimatePi(sigFig)
+    a = 1.0; b = 1/sqrt(2); t = 0.25; p2 = 1.0; prevRounded = NaN;
+    while true
+        a1 = (a + b)/2; b1 = sqrt(a*b); t1 = t - p2*(a - a1)^2; p2 = 2*p2;
+        pi_k = (a1 + b1)^2 / (4*t1);
+        curr = roundSig(pi_k, sigFig);
+        if ~isnan(prevRounded) && curr == prevRounded
+            piEstimate = curr; return;
+        end
+        a = a1; b = b1; t = t1; prevRounded = curr;
+    end
+end
