@@ -49,13 +49,15 @@ for i = linspace(100, 100000, 999)
 end
 
 %plot of estimated pi and its absolute error from true pi
-scatter(N, errorVec, "b.");
+h1 = scatter(N, errorVec, "b.");
 hold on;
 xlabel("Number of points thrown (N)"); 
 %no need for y label as we're overlaying two plots
 title("Monte Carlo pi Error");
-scatter(N, estimatedPiVec, "r."); %estimated pi scatter overlayed
+h2 = scatter(N, estimatedPiVec, "r."); %estimated pi scatter overlayed
 grid on;
+%add legend
+legend([h1 h2], {"Absolute error of estimated pi", "Estimated pi"}, "Location", "best")
 
 %new figure to plot execution time against error
 figure;
